@@ -6,10 +6,10 @@ init_environment() {
 
     # Compute current date and time
     if [[ -z "${CURRENT_DATE}" ]]; then
-        CURRENT_DATE=$(date +%F)         # e.g., 2025-04-07
+        CURRENT_DATE=$(date +%F) # e.g. 2025-04-07
     fi
     if [[ -z "${CURRENT_TIME}" ]]; then
-        CURRENT_TIME=$(date +%H-%M-%S)  # e.g., 11-48-00
+        CURRENT_TIME=$(date +%H-%M-%S) # e.g. 11-48-00
     fi
 
     # Configure AWS S3 parameters (required) - using local variables for security
@@ -31,8 +31,8 @@ init_environment() {
     # Configure additional s5cmd settings for MinIO only
     if [[ "${S3_TYPE}" == "minio" ]]; then
         export AWS_ENDPOINT_URL="${S3_API_HOST}"
-        export AWS_REGION="us-east-1"             # Required by s5cmd even for MinIO
-        export AWS_NO_VERIFY_SSL="true"           # Optional: disable SSL verification
+        export AWS_REGION="us-east-1"   # Required by s5cmd even for MinIO
+        export AWS_NO_VERIFY_SSL="true" # Optional: disable SSL verification
     fi
 
     # Define adapter S3 directory path

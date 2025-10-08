@@ -10,8 +10,8 @@ start_upload_monitoring() {
     ATTACHMENTS_S3_PATH="${REPORTS_S3_PATH}attachments/"
 
     # Create attachments directory
-    mkdir -p $ADAPTER_S3_OUT_DIR/adapter-S3/allure-results
-    mkdir -p $ADAPTER_S3_OUT_DIR/adapter-S3/attachments
+    mkdir -p "$ADAPTER_S3_OUT_DIR"/adapter-S3/allure-results
+    mkdir -p "$ADAPTER_S3_OUT_DIR"/adapter-S3/attachments
 
     # Store credentials for background processes (local variables, not exported)
     _BACKGROUND_S3_KEY="$_LOCAL_S3_KEY"
@@ -35,14 +35,14 @@ start_upload_monitoring() {
 start_inotify_uploader() {
     WATCH_DIR="$1"
     DEST_PATH="$2"
-    FILE_PATTERN="${3:-*}"  # Optional filename filter (e.g. *result.json)
+    FILE_PATTERN="${3:-*}" # Optional filename filter (e.g. *result.json)
 
     echo "📡 Starting inotify uploader for $WATCH_DIR => $DEST_PATH (filter: $FILE_PATTERN)"
 
     # Pass credentials as environment variables only for this process
-    inotifywait -m -e close_write,create --format '%w%f' "$WATCH_DIR" | while read NEW_FILE; do
+    inotifywait -m -e close_write,create --format '%w%f' "$WATCH_DIR" | while read -r NEW_FILE; do
         FILE_NAME=$(basename "$NEW_FILE")
-        if [[ "$FILE_NAME" == $FILE_PATTERN ]]; then
+        if [[ "$FILE_NAME" == "$FILE_PATTERN" ]]; then
             echo "🆕 Matching file: $FILE_NAME"
             upload_file_to_s3 "$NEW_FILE" "$DEST_PATH"
         else
@@ -62,9 +62,9 @@ upload_file_to_s3() {
 
     # Use background credentials for upload
     if [[ "$S3_TYPE" == "aws" ]]; then
-        AWS_ACCESS_KEY_ID="$_BACKGROUND_S3_KEY" AWS_SECRET_ACCESS_KEY="$_BACKGROUND_S3_SECRET" s5cmd --no-verify-ssl cp "$FILE_PATH" "$DEST_PATH" > /dev/null 2>&1
+        AWS_ACCESS_KEY_ID="$_BACKGROUND_S3_KEY" AWS_SECRET_ACCESS_KEY="$_BACKGROUND_S3_SECRET" s5cmd --no-verify-ssl cp "$FILE_PATH" "$DEST_PATH" >/dev/null 2>&1
     elif [[ "$S3_TYPE" == "minio" ]]; then
-        AWS_ACCESS_KEY_ID="$_BACKGROUND_S3_KEY" AWS_SECRET_ACCESS_KEY="$_BACKGROUND_S3_SECRET" s5cmd --no-verify-ssl --endpoint-url "$S3_API_HOST" cp "$FILE_PATH" "$DEST_PATH" > /dev/null 2>&1
+        AWS_ACCESS_KEY_ID="$_BACKGROUND_S3_KEY" AWS_SECRET_ACCESS_KEY="$_BACKGROUND_S3_SECRET" s5cmd --no-verify-ssl --endpoint-url "$S3_API_HOST" cp "$FILE_PATH" "$DEST_PATH" >/dev/null 2>&1
     fi
 }
 
@@ -72,14 +72,14 @@ upload_file_to_s3() {
 start_sync_uploader() {
     WATCH_DIR="$1"
     DEST_PATH="$2"
-    FILE_PATTERN="${3:-*}"  # Optional filename filter
+    FILE_PATTERN="${3:-*}" # Optional filename filter
 
     echo "🔄 Starting sync uploader for $WATCH_DIR => $DEST_PATH (filter: $FILE_PATTERN)"
 
     # Pass credentials as environment variables only for this process
-    inotifywait -m -e close_write,create --format '%w%f' "$WATCH_DIR" | while read NEW_FILE; do
+    inotifywait -m -e close_write,create --format '%w%f' "$WATCH_DIR" | while read -r NEW_FILE; do
         FILE_NAME=$(basename "$NEW_FILE")
-        if [[ "$FILE_NAME" == $FILE_PATTERN ]]; then
+        if [[ "$FILE_NAME" == "$FILE_PATTERN" ]]; then
             echo "🆕 Matching file: $FILE_NAME - triggering sync"
             sync_directory_to_s3 "$WATCH_DIR" "$DEST_PATH"
         #else
@@ -99,9 +99,9 @@ sync_directory_to_s3() {
 
     # Use background credentials for sync
     if [[ "$S3_TYPE" == "aws" ]]; then
-        AWS_ACCESS_KEY_ID="$_BACKGROUND_S3_KEY" AWS_SECRET_ACCESS_KEY="$_BACKGROUND_S3_SECRET" s5cmd --no-verify-ssl sync "$SOURCE_DIR/" "$DEST_PATH" > /dev/null 2>&1
+        AWS_ACCESS_KEY_ID="$_BACKGROUND_S3_KEY" AWS_SECRET_ACCESS_KEY="$_BACKGROUND_S3_SECRET" s5cmd --no-verify-ssl sync "$SOURCE_DIR/" "$DEST_PATH" >/dev/null 2>&1
     elif [[ "$S3_TYPE" == "minio" ]]; then
-        AWS_ACCESS_KEY_ID="$_BACKGROUND_S3_KEY" AWS_SECRET_ACCESS_KEY="$_BACKGROUND_S3_SECRET" s5cmd --no-verify-ssl --endpoint-url "$S3_API_HOST" sync "$SOURCE_DIR/" "$DEST_PATH" > /dev/null 2>&1
+        AWS_ACCESS_KEY_ID="$_BACKGROUND_S3_KEY" AWS_SECRET_ACCESS_KEY="$_BACKGROUND_S3_SECRET" s5cmd --no-verify-ssl --endpoint-url "$S3_API_HOST" sync "$SOURCE_DIR/" "$DEST_PATH" >/dev/null 2>&1
     fi
 }
 
@@ -127,7 +127,7 @@ finalize_upload() {
     fi
 
     # Upload marker file
-    echo -n "false" > $ADAPTER_S3_OUT_DIR/adapter-S3/allure-results.uploaded
+    echo -n "false" >"$ADAPTER_S3_OUT_DIR"/adapter-S3/allure-results.uploaded
     if [[ "$S3_TYPE" == "aws" ]]; then
         s5cmd --no-verify-ssl cp "$ADAPTER_S3_OUT_DIR/adapter-S3/allure-results.uploaded" "${RESULTS_S3_PATH}allure-results.uploaded"
     elif [[ "$S3_TYPE" == "minio" ]]; then
@@ -151,7 +151,7 @@ finalize_upload() {
 # Generate URLs for results
 generate_result_urls() {
     if [[ "$S3_TYPE" == "aws" ]]; then
-        RESULT_URL="${S3_BUCKET}.${S3_UI_URL}/Result/${ENV_NAME}/${CURRENT_DATE}/${CURRENT_TIME}/allure-results/"
+        RESULTS_URL="${S3_BUCKET}.${S3_UI_URL}/Result/${ENV_NAME}/${CURRENT_DATE}/${CURRENT_TIME}/allure-results/"
     elif [[ "$S3_TYPE" == "minio" ]]; then
         # Generate base64-encoded URLs for MinIO UI
         RESULTS_FOLDER_PATH="Result/${ENV_NAME}/${CURRENT_DATE}/${CURRENT_TIME}/allure-results/"

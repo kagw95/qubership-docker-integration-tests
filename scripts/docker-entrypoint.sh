@@ -78,7 +78,7 @@ run_robot() {
     robot_args=()
     if [[ -n "$TAGS" ]]; then
         # Split by OR and add each tag as separate -i parameter
-        IFS='OR' read -ra tag_array <<< "$TAGS"
+        IFS='OR' read -ra tag_array <<<"$TAGS"
         for tag in "${tag_array[@]}"; do
             # Skip empty tags
             if [[ -n "$tag" ]]; then
@@ -92,7 +92,7 @@ run_robot() {
             # Extract tags without -e flag
             tags_only="${BASH_REMATCH[1]}"
             # Split by OR and add each tag as separate -e parameter
-            IFS='OR' read -ra excluded_tag_array <<< "$tags_only"
+            IFS='OR' read -ra excluded_tag_array <<<"$tags_only"
             for tag in "${excluded_tag_array[@]}"; do
                 # Skip empty tags
                 if [[ -n "$tag" ]]; then
@@ -102,7 +102,7 @@ run_robot() {
         else
             # No -e flag present, add it
             # Split by OR and add each tag as separate -e parameter
-            IFS='OR' read -ra excluded_tag_array <<< "$excluded_tags"
+            IFS='OR' read -ra excluded_tag_array <<<"$excluded_tags"
             for tag in "${excluded_tag_array[@]}"; do
                 # Skip empty tags
                 if [[ -n "$tag" ]]; then

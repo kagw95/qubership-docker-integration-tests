@@ -115,7 +115,7 @@ run_robot() {
 
     # Call adapter-S3-entrypoint.sh with robot arguments
     echo "🚀 Calling adapter-S3-entrypoint.sh with arguments: ${robot_args[*]}"
-    ${ROBOT_HOME}/scripts/adapter-S3/adapter-S3-entrypoint.sh "${robot_args[@]}"
+    "${ROBOT_HOME}"/scripts/adapter-S3/adapter-S3-entrypoint.sh "${robot_args[@]}"
 
     robot_result=$?
     if [[ ${robot_result} -ne 0 ]]; then

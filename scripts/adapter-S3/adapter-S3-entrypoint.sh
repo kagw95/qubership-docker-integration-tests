@@ -16,7 +16,6 @@ echo "📦 S3 API host: $S3_API_HOST"
 echo "📦 S3 UI URL: $S3_UI_URL"
 echo "📦 Environment name: $ENV_NAME"
 
-
 # Import modular components
 source "${ROBOT_HOME}"/scripts/adapter-S3/init.sh
 source "${ROBOT_HOME}"/scripts/adapter-S3/test-runner.sh

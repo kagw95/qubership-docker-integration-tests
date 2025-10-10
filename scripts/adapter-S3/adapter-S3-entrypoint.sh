@@ -9,12 +9,12 @@ echo "📅 Timestamp: $(date)"
 # Set default upload method
 export UPLOAD_METHOD="${UPLOAD_METHOD:-sync}"
 echo "📤 Upload method: $UPLOAD_METHOD"
-echo "📦 Report view host URL: $REPORT_VIEW_HOST_URL"
-echo "📦 S3 bucket: $S3_BUCKET"
-echo "📦 S3 type: $S3_TYPE"
-echo "📦 S3 API host: $S3_API_HOST"
-echo "📦 S3 UI URL: $S3_UI_URL"
-echo "📦 Environment name: $ENV_NAME"
+echo "📦 Report view host URL: $ALLURE_REPORT_VIEW_HOST_URL"
+echo "📦 S3 bucket: $ALLURE_S3_BUCKET"
+echo "📦 S3 type: $ALLURE_S3_TYPE"
+echo "📦 S3 API host: $ALLURE_S3_API_HOST"
+echo "📦 S3 UI URL: $ALLURE_S3_UI_URL"
+echo "📦 Environment name: $ALLURE_ENV_NAME"
 
 # Import modular components
 source "${ROBOT_HOME}"/scripts/adapter-S3/init.sh

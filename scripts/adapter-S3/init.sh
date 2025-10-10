@@ -13,24 +13,24 @@ init_environment() {
     fi
 
     # Configure AWS S3 parameters (required) - using local variables for security
-    if [[ -z "${S3_ACCESS_KEY}" ]]; then
-        echo "❌ S3_ACCESS_KEY is required but not set"
+    if [[ -z "${ALLURE_S3_ACCESS_KEY}" ]]; then
+        echo "❌ ALLURE_S3_ACCESS_KEY is required but not set"
         exit 1
     fi
-    if [[ -z "${S3_SECRET_KEY}" ]]; then
-        echo "❌ S3_SECRET_KEY is required but not set"
+    if [[ -z "${ALLURE_S3_SECRET_KEY}" ]]; then
+        echo "❌ ALLURE_S3_SECRET_KEY is required but not set"
         exit 1
     fi
 
     # Store credentials in local variables (not exported to environment)
-    _LOCAL_S3_KEY="$S3_ACCESS_KEY"
-    _LOCAL_S3_SECRET="$S3_SECRET_KEY"
+    _LOCAL_S3_KEY="$ALLURE_S3_ACCESS_KEY"
+    _LOCAL_S3_SECRET="$ALLURE_S3_SECRET_KEY"
     export AWS_ACCESS_KEY_ID="$_LOCAL_S3_KEY"
     export AWS_SECRET_ACCESS_KEY="$_LOCAL_S3_SECRET"
 
     # Configure additional s5cmd settings for MinIO only
-    if [[ "${S3_TYPE}" == "minio" ]]; then
-        export AWS_ENDPOINT_URL="${S3_API_HOST}"
+    if [[ "${ALLURE_S3_TYPE}" == "minio" ]]; then
+        export AWS_ENDPOINT_URL="${ALLURE_S3_API_HOST}"
         export AWS_REGION="us-east-1"   # Required by s5cmd even for MinIO
         export AWS_NO_VERIFY_SSL="true" # Optional: disable SSL verification
     fi

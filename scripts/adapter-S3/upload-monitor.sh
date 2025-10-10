@@ -5,8 +5,8 @@ start_upload_monitoring() {
     echo "📡 Starting event-based upload monitoring..."
 
     # Prepare common S3 paths
-    RESULTS_S3_PATH="s3://${S3_BUCKET}/Result/${ENV_NAME}/${CURRENT_DATE}/${CURRENT_TIME}/"
-    REPORTS_S3_PATH="s3://${S3_BUCKET}/Report/${ENV_NAME}/${CURRENT_DATE}/${CURRENT_TIME}/"
+    RESULTS_S3_PATH="s3://${ALLURE_S3_BUCKET}/Result/${ALLURE_ENV_NAME}/${CURRENT_DATE}/${CURRENT_TIME}/"
+    REPORTS_S3_PATH="s3://${ALLURE_S3_BUCKET}/Report/${ALLURE_ENV_NAME}/${CURRENT_DATE}/${CURRENT_TIME}/"
     ATTACHMENTS_S3_PATH="${REPORTS_S3_PATH}attachments/"
 
     # Create attachments directory
@@ -61,10 +61,10 @@ upload_file_to_s3() {
     local DEST_PATH="$2"
 
     # Use background credentials for upload
-    if [[ "$S3_TYPE" == "aws" ]]; then
+    if [[ "$ALLURE_S3_TYPE" == "aws" ]]; then
         AWS_ACCESS_KEY_ID="$_BACKGROUND_S3_KEY" AWS_SECRET_ACCESS_KEY="$_BACKGROUND_S3_SECRET" s5cmd --no-verify-ssl cp "$FILE_PATH" "$DEST_PATH" >/dev/null 2>&1
-    elif [[ "$S3_TYPE" == "minio" ]]; then
-        AWS_ACCESS_KEY_ID="$_BACKGROUND_S3_KEY" AWS_SECRET_ACCESS_KEY="$_BACKGROUND_S3_SECRET" s5cmd --no-verify-ssl --endpoint-url "$S3_API_HOST" cp "$FILE_PATH" "$DEST_PATH" >/dev/null 2>&1
+    elif [[ "$ALLURE_S3_TYPE" == "minio" ]]; then
+        AWS_ACCESS_KEY_ID="$_BACKGROUND_S3_KEY" AWS_SECRET_ACCESS_KEY="$_BACKGROUND_S3_SECRET" s5cmd --no-verify-ssl --endpoint-url "$ALLURE_S3_API_HOST" cp "$FILE_PATH" "$DEST_PATH" >/dev/null 2>&1
     fi
 }
 
@@ -98,10 +98,10 @@ sync_directory_to_s3() {
     local DEST_PATH="$2"
 
     # Use background credentials for sync
-    if [[ "$S3_TYPE" == "aws" ]]; then
+    if [[ "$ALLURE_S3_TYPE" == "aws" ]]; then
         AWS_ACCESS_KEY_ID="$_BACKGROUND_S3_KEY" AWS_SECRET_ACCESS_KEY="$_BACKGROUND_S3_SECRET" s5cmd --no-verify-ssl sync "$SOURCE_DIR/" "$DEST_PATH" >/dev/null 2>&1
-    elif [[ "$S3_TYPE" == "minio" ]]; then
-        AWS_ACCESS_KEY_ID="$_BACKGROUND_S3_KEY" AWS_SECRET_ACCESS_KEY="$_BACKGROUND_S3_SECRET" s5cmd --no-verify-ssl --endpoint-url "$S3_API_HOST" sync "$SOURCE_DIR/" "$DEST_PATH" >/dev/null 2>&1
+    elif [[ "$ALLURE_S3_TYPE" == "minio" ]]; then
+        AWS_ACCESS_KEY_ID="$_BACKGROUND_S3_KEY" AWS_SECRET_ACCESS_KEY="$_BACKGROUND_S3_SECRET" s5cmd --no-verify-ssl --endpoint-url "$ALLURE_S3_API_HOST" sync "$SOURCE_DIR/" "$DEST_PATH" >/dev/null 2>&1
     fi
 }
 
@@ -110,28 +110,28 @@ finalize_upload() {
     echo "🔄 Finalizing upload operations..."
 
     # Prepare common S3 paths
-    RESULTS_S3_PATH="s3://${S3_BUCKET}/Result/${ENV_NAME}/${CURRENT_DATE}/${CURRENT_TIME}/"
-    REPORTS_S3_PATH="s3://${S3_BUCKET}/Report/${ENV_NAME}/${CURRENT_DATE}/${CURRENT_TIME}/"
+    RESULTS_S3_PATH="s3://${ALLURE_S3_BUCKET}/Result/${ALLURE_ENV_NAME}/${CURRENT_DATE}/${CURRENT_TIME}/"
+    REPORTS_S3_PATH="s3://${ALLURE_S3_BUCKET}/Report/${ALLURE_ENV_NAME}/${CURRENT_DATE}/${CURRENT_TIME}/"
     ATTACHMENTS_S3_PATH="${REPORTS_S3_PATH}attachments/"
 
     # Restore credentials for final operations
     restore_aws_credentials
 
     # Final sync to ensure all files are captured
-    if [[ "$S3_TYPE" == "aws" ]]; then
+    if [[ "$ALLURE_S3_TYPE" == "aws" ]]; then
         s5cmd --no-verify-ssl sync "$ADAPTER_S3_OUT_DIR/adapter-S3/allure-results/" "${RESULTS_S3_PATH}allure-results/"
         s5cmd --no-verify-ssl sync "$ADAPTER_S3_OUT_DIR/adapter-S3/attachments/" "$ATTACHMENTS_S3_PATH"
-    elif [[ "$S3_TYPE" == "minio" ]]; then
-        s5cmd --no-verify-ssl --endpoint-url "$S3_API_HOST" sync "$ADAPTER_S3_OUT_DIR/adapter-S3/allure-results/" "${RESULTS_S3_PATH}allure-results/"
-        s5cmd --no-verify-ssl --endpoint-url "$S3_API_HOST" sync "$ADAPTER_S3_OUT_DIR/adapter-S3/attachments/" "$ATTACHMENTS_S3_PATH"
+    elif [[ "$ALLURE_S3_TYPE" == "minio" ]]; then
+        s5cmd --no-verify-ssl --endpoint-url "$ALLURE_S3_API_HOST" sync "$ADAPTER_S3_OUT_DIR/adapter-S3/allure-results/" "${RESULTS_S3_PATH}allure-results/"
+        s5cmd --no-verify-ssl --endpoint-url "$ALLURE_S3_API_HOST" sync "$ADAPTER_S3_OUT_DIR/adapter-S3/attachments/" "$ATTACHMENTS_S3_PATH"
     fi
 
     # Upload marker file
     echo -n "false" >"$ADAPTER_S3_OUT_DIR"/adapter-S3/allure-results.uploaded
-    if [[ "$S3_TYPE" == "aws" ]]; then
+    if [[ "$ALLURE_S3_TYPE" == "aws" ]]; then
         s5cmd --no-verify-ssl cp "$ADAPTER_S3_OUT_DIR/adapter-S3/allure-results.uploaded" "${RESULTS_S3_PATH}allure-results.uploaded"
-    elif [[ "$S3_TYPE" == "minio" ]]; then
-        s5cmd --no-verify-ssl --endpoint-url "$S3_API_HOST" cp "$ADAPTER_S3_OUT_DIR/adapter-S3/allure-results.uploaded" "${RESULTS_S3_PATH}allure-results.uploaded"
+    elif [[ "$ALLURE_S3_TYPE" == "minio" ]]; then
+        s5cmd --no-verify-ssl --endpoint-url "$ALLURE_S3_API_HOST" cp "$ADAPTER_S3_OUT_DIR/adapter-S3/allure-results.uploaded" "${RESULTS_S3_PATH}allure-results.uploaded"
     fi
 
     # Generate result URLs
@@ -143,24 +143,24 @@ finalize_upload() {
     echo ""
     echo "Results are available at: ${RESULTS_URL}"
     echo "Reports are available at: ${REPORTS_URL}"
-    echo "Report view is available at: ${REPORT_VIEW_HOST_URL}/${REPORTS_FOLDER_PATH}index.html"
+    echo "Report view is available at: ${ALLURE_REPORT_VIEW_HOST_URL}/${REPORTS_FOLDER_PATH}index.html"
 
     echo "✅ Upload finalization completed"
 }
 
 # Generate URLs for results
 generate_result_urls() {
-    if [[ "$S3_TYPE" == "aws" ]]; then
-        RESULTS_URL="${S3_BUCKET}.${S3_UI_URL}/Result/${ENV_NAME}/${CURRENT_DATE}/${CURRENT_TIME}/allure-results/"
-    elif [[ "$S3_TYPE" == "minio" ]]; then
+    if [[ "$ALLURE_S3_TYPE" == "aws" ]]; then
+        RESULTS_URL="${ALLURE_S3_BUCKET}.${ALLURE_S3_UI_URL}/Result/${ALLURE_ENV_NAME}/${CURRENT_DATE}/${CURRENT_TIME}/allure-results/"
+    elif [[ "$ALLURE_S3_TYPE" == "minio" ]]; then
         # Generate base64-encoded URLs for MinIO UI
-        RESULTS_FOLDER_PATH="Result/${ENV_NAME}/${CURRENT_DATE}/${CURRENT_TIME}/allure-results/"
+        RESULTS_FOLDER_PATH="Result/${ALLURE_ENV_NAME}/${CURRENT_DATE}/${CURRENT_TIME}/allure-results/"
         RESULTS_ENCODED_PATH=$(echo -n "${RESULTS_FOLDER_PATH}" | base64)
-        RESULTS_URL="${S3_UI_URL}/browser/${S3_BUCKET}/${RESULTS_ENCODED_PATH}"
+        RESULTS_URL="${ALLURE_S3_UI_URL}/browser/${ALLURE_S3_BUCKET}/${RESULTS_ENCODED_PATH}"
 
-        REPORTS_FOLDER_PATH="Report/${ENV_NAME}/${CURRENT_DATE}/${CURRENT_TIME}/allure-report/"
+        REPORTS_FOLDER_PATH="Report/${ALLURE_ENV_NAME}/${CURRENT_DATE}/${CURRENT_TIME}/allure-report/"
         REPORTS_ENCODED_PATH=$(echo -n "${REPORTS_FOLDER_PATH}" | base64)
-        REPORTS_URL="${S3_UI_URL}/browser/${S3_BUCKET}/${REPORTS_ENCODED_PATH}"
+        REPORTS_URL="${ALLURE_S3_UI_URL}/browser/${ALLURE_S3_BUCKET}/${REPORTS_ENCODED_PATH}"
     fi
 }
 
@@ -169,8 +169,8 @@ clear_sensitive_vars() {
     echo "🔐 Clearing sensitive environment variables..."
     unset AWS_ACCESS_KEY_ID
     unset AWS_SECRET_ACCESS_KEY
-    unset S3_ACCESS_KEY
-    unset S3_SECRET_KEY
+    unset ALLURE_S3_ACCESS_KEY
+    unset ALLURE_S3_SECRET_KEY
 }
 
 # Restore AWS credentials for final operations
